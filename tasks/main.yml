@@ -12,30 +12,27 @@
   become: yes
 
 - name: Ensure Easy-RSA directory exists
-  block:
-    - name: Check if Easy-RSA directory exists
-      stat:
-        path: "{{ easy_rsa_path }}"
-      register: easy_rsa_exists
+  file:
+    path: "{{ easy_rsa_path }}"
+    state: directory
+    mode: '0755'
+  become: yes
 
-    - name: Create Easy-RSA directory if it doesn't exist
-      command: make-cadir "{{ easy_rsa_path }}"
-      become: yes
-      when: not easy_rsa_exists.stat.exists
-
-- name: Ensure PKI directory exists
+- name: Ensure PKI directory and initialize if not exists
   block:
-    - name: Check if PKI directory exists
-      stat:
+    - name: Ensure PKI directory exists
+      file:
         path: "{{ easy_rsa_pki_path }}"
-      register: pki_exists
+        state: directory
+        mode: '0755'
+      become: yes
 
-    - name: Create PKI directory if it doesn't exist
+    - name: Initialize PKI
       command: ./easyrsa init-pki
       args:
         chdir: "{{ easy_rsa_path }}"
+        creates: "{{ easy_rsa_pki_path }}/issued"
       become: yes
-      when: not pki_exists.stat.exists
 
 - name: Create and manage CA and server certificates
   block:
